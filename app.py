@@ -5,7 +5,7 @@ from loguru import logger
 import os
 
 from models import QuizModel, QuizQuestionsModel, AnswersModel
-from schemas import QuizSchema, EditQuizRequest
+from schemas import QuizSchema, EditQuizRequest, DeleteQuizResponse
 from database import SessionLocal, Base, engine
 
 app = FastAPI()
@@ -74,6 +74,26 @@ async def edit_quiz(request: EditQuizRequest, db: Session = Depends(get_db)):
         db.rollback()
         logger.error(f"Error updating quiz: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred while updating the quiz: {str(e)}")
+
+@app.delete("/api/delete-quiz/{quiz_id}", response_model=DeleteQuizResponse)
+async def delete_quiz(quiz_id: int, db: Session = Depends(get_db)):
+    """
+    Deletes a quiz and all associated questions and answers.
+    """
+    try:
+        quiz = db.query(QuizModel).filter(QuizModel.id == quiz_id).first()
+        if not quiz:
+            raise HTTPException(status_code=404, detail=f"Quiz with ID {quiz_id} not found")
+
+        db.delete(quiz)
+        db.commit()
+
+        return DeleteQuizResponse(message=f"Quiz with ID {quiz_id} deleted successfully.")
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting quiz: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the quiz: {str(e)}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8001))
