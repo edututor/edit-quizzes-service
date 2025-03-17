@@ -23,3 +23,6 @@ class EditQuizRequest(BaseModel):
 class QuizSchema(BaseModel):
     quiz_name: str
     questions: List[QuestionSchema]
+
+class DeleteQuizResponse(BaseModel):
+    message: str
