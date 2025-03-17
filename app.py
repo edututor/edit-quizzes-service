@@ -34,7 +34,7 @@ async def edit_quiz(request: EditQuizRequest, db: Session = Depends(get_db)):
     """
     try:
         # Find the quiz by ID
-        quiz = db.query(QuizModel).filter(QuizModel.id == request.id).first()
+        quiz: QuizModel = db.query(QuizModel).filter(QuizModel.id == request.id).first()
         if not quiz:
             raise HTTPException(status_code=404, detail=f"Quiz with ID {request.id} not found")
         
@@ -42,7 +42,7 @@ async def edit_quiz(request: EditQuizRequest, db: Session = Depends(get_db)):
         quiz.title = request.title
         
         # Delete all existing questions and their answers
-        db.query(QuizQuestionsModel).filter(QuizQuestionsModel.quiz_id == request.id).delete()
+        quiz.questions.clear()
         db.commit()
         
         # Create new questions and answers from the request data
